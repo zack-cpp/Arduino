@@ -1,14 +1,18 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-const char* ssid = "";
-const char* pass = "";
-const char* server = "";
-const char* username = "";
-const char* mqtt_pass = "";
-const char* subTopic = "";
-const char* pubTopic = "";
-uint16_t port;
+struct{
+  const char* ssid = "";
+  const char* pass = "";
+}Wifi;
+struct{
+  const char* server = "";
+  const char* username = "";
+  const char* pass = "";
+  const char* subTopic = "";
+  const char* pubTopic = "";
+  uint16_t port = 13001; // use your own port
+}MQTT;
 
 String data;
 String pubData;
@@ -24,8 +28,9 @@ void reconnect();
 
 void setup() {
   Serial.begin(115200);
+  //WiFi.mode(WIFI_STA);
   WiFiConnect();
-  client.setServer(server,port);
+  client.setServer(MQTT.server,MQTT.port);
   client.setCallback(getMQTT);
 }
 
@@ -42,9 +47,9 @@ void loop() {
 
 void WiFiConnect(){
   Serial.print("Connecting to: ");
-  Serial.println(ssid);
+  Serial.println(Wifi.ssid);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid,pass);
+  WiFi.begin(Wifi.ssid,Wifi.pass);
   while(WiFi.status() != WL_CONNECTED){
     Serial.print(".");
     delay(500);
@@ -65,11 +70,11 @@ void getMQTT(char* topic, byte* payload, unsigned int length){
   }
   Serial.print("\nData: ");
   Serial.println(data);
-  
+  //Publish message after receiving data
+  counter++;
   pubData = "Data Received: ";
   pubData = pubData + (String)counter;
-  client.publish(pubTopic,pubData.c_str());
-  counter++;
+  client.publish(MQTT.pubTopic,pubData.c_str());
 }
 
 void reconnect() {
@@ -79,9 +84,9 @@ void reconnect() {
     String clientId = "ESP8266Client-";
     clientId += String(random(0xffff), HEX);
     
-    if (client.connect(clientId.c_str(),username,mqtt_pass)) {
+    if (client.connect(clientId.c_str(),MQTT.username,MQTT.pass)) {
       Serial.println("connected");
-      client.subscribe(subTopic);
+      client.subscribe(MQTT.subTopic);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
