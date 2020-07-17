@@ -2,6 +2,9 @@
 #include <LCD.h>
 #include <LiquidCrystal_I2C.h>
 #define pump 10
+
+unsigned int time = 0;;
+
 const byte ROWS = 4;
 const byte COLS = 4;
 
@@ -10,6 +13,8 @@ byte colPins[COLS] = {5,4,3,2};
 
 bool state = false;
 bool watering = false;
+bool wateringDone = false;
+bool buttonPressed = false;
 
 String input = "";
 String jam[2],menit[2];
@@ -53,35 +58,39 @@ void loop() {
   char key = keypad.getKey();
   if(key){
     if(key == KeysID[12]){
+      buttonPressed = true;
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Watering Time!!!");
       startWatering();
     }
   }
-  // FOR DEBUGGING
-  Serial.println("Current Time");
-  Serial.print(iJam[0]);
-  Serial.print(":");
-  Serial.print(iMenit[0]);
-  Serial.print(":");
-  Serial.println(counter);
-  Serial.println("Watering Time");
-  Serial.print(iJam[1]);
-  Serial.print(":");
-  Serial.println(iMenit[1]);
-  if(watering){
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Watering Time!!!");
-  }else{
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Watering at:");
-    lcd.setCursor(0,1);
-    lcd.print(iJam[1]);
-    lcd.print(":");
-    lcd.print(iMenit[1]);
+  if(time == 0){
+      // FOR DEBUGGING
+//    Serial.print("Current Time: \t");
+//    Serial.print(iJam[0]);
+//    Serial.print(":");
+//    Serial.print(iMenit[0]);
+//    Serial.print(":");
+//    Serial.println(counter);
+//    Serial.print("Watering Time:\t");
+//    Serial.print(iJam[1]);
+//    Serial.print(":");
+//    Serial.println(iMenit[1]);
+    if(watering){
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Watering Time!!!");
+//      Serial.println("Watering Time!!!");
+    }else{
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Watering at:");
+      lcd.setCursor(0,1);
+      lcd.print(iJam[1]);
+      lcd.print(":");
+      lcd.print(iMenit[1]);
+    }
   }
 }
 
@@ -120,7 +129,7 @@ void getClock(){
           lcd.print(input[x]);
         }
         if(jml == 5){
-            Serial.println("break");
+//            Serial.println("break");
             break;
         }
       }
@@ -159,21 +168,27 @@ void decodeClock(){
   }
 }
 void checkTime(){
-  if(iJam[0] == iJam[1] && iMenit[0] == iMenit[1] && wateringCounter < 20){
+  if(iJam[0] == iJam[1] && iMenit[0] == iMenit[1] && wateringCounter < 10 && wateringDone == false || buttonPressed == true){
     startWatering();
-  }else if(iJam[0] == iJam[1]){
+    wateringDone = true;
+  }
+  else if(iJam[0] == iJam[1]){
     if(iMenit[0] != iMenit[1]){
-      if(watering){}
-      else{
-        wateringCounter = 0;
-      }
+      wateringDone = false;
     }
   }
   wateringTimer();
 }
 void startClock(){
-  delay(1000);
-  counter++;
+  delay(10);
+  time++;
+  if(time == 100){
+    counter++;
+    if(watering){
+      wateringCounter++;
+    }
+    time = 0;
+  }
   if(counter == 60){
     counter = 0;
     iMenit[0]++;
@@ -185,10 +200,6 @@ void startClock(){
   if(iJam[0] == 24){
     iJam[0] = 0;
   }
-  if(watering){
-    Serial.println("Watering Time!!!");
-    wateringCounter++;
-  }
 }
 
 void startWatering(){
@@ -197,8 +208,12 @@ void startWatering(){
 }
 
 void wateringTimer(){
-  if(wateringCounter == 20){
+  if(wateringCounter == 10){
     watering = false;
+    wateringCounter = 0;
     digitalWrite(pump,HIGH); //ACTIVE LOW
+    if(buttonPressed = true){
+      buttonPressed = false;
+    }
   }
 }
