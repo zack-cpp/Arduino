@@ -22,16 +22,14 @@ struct Config{
 struct{
   String data;
   String pubData;
-  const char* server = "tailor.cloudmqtt.com";
-  //const char *server = "broker.mqtt-dashboard.com";
-  const char* username = "ghavsonc";
-  const char* pass = "1FBDeHNad_kb";
-  const char* subTopic1 = "subKamar";
-  const char* subTopic2 = "subTamu";
-  const char* pubTopic1 = "statusKamar";
-  const char* pubTopic2 = "statusRuangTamu";
-  uint16_t port = 13001;
-  //uint16_t port = 1883;
+  const char* server = "";
+  const char* username = "";
+  const char* pass = "";
+  const char* subTopic1 = "";
+  const char* subTopic2 = "";
+  const char* pubTopic1 = "";
+  const char* pubTopic2 = "";
+  uint16_t port;
 }MQTT;
 
 NextionText status("status");
